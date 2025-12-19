@@ -423,18 +423,3 @@ databaseChangeLog:
         - sqlFile:
             encoding: utf8
             path: classpath:db/changelog/202511131023.sql
-  - changeSet:
-      id: 202512031517
-      author: rainv123
-      changes:
-        - sqlFile:
-            encoding: utf8
-            path: classpath:db/changelog/202512031517.sql
-    
-  - changeSet:
-      id: 202512041515
-      author: cgd
-      changes:
-        - sqlFile:
-            encoding: utf8
-            path: classpath:db/changelog/202512041515.sql
