@@ -1,0 +1,24 @@
+# syntax=docker/dockerfile:1.7
+# Dockerfile-server-base (Jetson/ARM64 friendly)
+FROM --platform=$TARGETPLATFORM python:3.10-slim
+
+ARG DEBIAN_FRONTEND=noninteractive
+ARG PIP_INDEX_URL=
+ARG PIP_TRUSTED_HOST=
+
+# System deps
+# - ffmpeg: audio codec/format utilities
+# - libopus0: opus runtime
+# - locales: UTF-8 locale generation
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked     --mount=type=cache,target=/var/lib/apt,sharing=locked     apt-get update &&     apt-get install -y --no-install-recommends       ca-certificates curl       libopus0       ffmpeg       locales     && sed -i 's/^# \(zh_CN.UTF-8 UTF-8\)/\1/' /etc/locale.gen     && locale-gen     && apt-get clean     && rm -rf /var/lib/apt/lists/*
+
+# Optional pip mirror (leave empty to use default PyPI)
+RUN if [ -n "$PIP_INDEX_URL" ]; then         pip config set global.index-url "$PIP_INDEX_URL";     fi &&     if [ -n "$PIP_TRUSTED_HOST" ]; then         pip config set global.trusted-host "$PIP_TRUSTED_HOST";     fi &&     pip config set global.timeout 120 &&     pip config set install.retries 5
+
+ENV LANG=zh_CN.UTF-8     LC_ALL=zh_CN.UTF-8     LANGUAGE=zh_CN:zh     PYTHONIOENCODING=utf-8     PIP_DISABLE_PIP_VERSION_CHECK=1     PYTHONDONTWRITEBYTECODE=1     PYTHONUNBUFFERED=1
+
+WORKDIR /opt/xiaozhi-esp32-server
+
+COPY main/xiaozhi-server/requirements.txt /tmp/requirements.txt
+
+RUN --mount=type=cache,target=/root/.cache/pip,sharing=locked     pip install --upgrade pip setuptools wheel &&     pip install -r /tmp/requirements.txt --default-timeout=120 --retries 5 &&     rm -f /tmp/requirements.txt
